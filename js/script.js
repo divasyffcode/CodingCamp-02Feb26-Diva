@@ -179,17 +179,26 @@ function renderTodos() {
 function toggleComplete(id, btnElement) {
     const todo = todos.find(t => t.id === id);
     if (todo) {
+        const listItem = btnElement.closest('li');
+        
+        // Jika sedang di tab 'Pending' atau 'Done', kita jalankan animasi slide out
         if (currentFilter !== 'all') {
-            const listItem = btnElement.closest('li');
+            // Hapus animasi pulse (jika ada) agar tidak mengganggu animationend
+            listItem.classList.remove('today-task');
             listItem.classList.remove('animate-enter');
+            
+            // Tambahkan animasi keluar
             listItem.classList.add('animate-leave');
 
+            // Gunakan { once: true } agar event listener langsung terhapus setelah jalan
             listItem.addEventListener('animationend', () => {
                 todo.completed = !todo.completed;
                 saveToLocal();
                 renderTodos();
-            });
+            }, { once: true });
+            
         } else {
+            // Jika di tab 'All', langsung update tanpa slide out
             todo.completed = !todo.completed;
             saveToLocal();
             renderTodos();

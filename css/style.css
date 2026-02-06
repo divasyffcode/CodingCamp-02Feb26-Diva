@@ -74,12 +74,15 @@ css
     100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
-/* Style Khusus Urgent */
-.urgent-task {
-    border-left: 4px solid #EF4444 !important; /* Border Merah Tebal di Kiri */
-    background-color: #FEF2F2 !important; /* Background Merah Muda */
+/* Style Khusus Urgent - Dibuat lebih spesifik agar tidak tabrakan */
+.animate-enter.urgent-task:not(.opacity-60) {
+    border-left: 4px solid #EF4444 !important;
+    background-color: #FEF2F2 !important;
 }
 
-.today-task {
-    animation: pulseRed 2s infinite;
+/* Pastikan pulse berhenti saat item sedang keluar agar animationend terpicu tepat waktu */
+.animate-leave {
+    animation: slideOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+    pointer-events: none;
+    overflow: hidden;
 }
