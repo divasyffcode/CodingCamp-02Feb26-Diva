@@ -176,28 +176,17 @@ function renderTodos() {
 function toggleComplete(id, btnElement) {
     const todo = todos.find(t => t.id === id);
     if (todo) {
-        // Cek apakah sedang di tab filter (bukan All)
-        // Jika ya, kita butuh animasi slide out
         if (currentFilter !== 'all') {
             const listItem = btnElement.closest('li');
-            
-            // --- PERBAIKAN DI SINI ---
-            // Hapus class 'today-task' agar animasi berdenyut BERHENTI dulu
-            listItem.classList.remove('today-task'); 
             listItem.classList.remove('animate-enter');
-            
-            // Baru jalankan animasi keluar
             listItem.classList.add('animate-leave');
 
-            // Gunakan { once: true } agar event listener otomatis terhapus setelah jalan
             listItem.addEventListener('animationend', () => {
                 todo.completed = !todo.completed;
                 saveToLocal();
                 renderTodos();
-            }, { once: true });
-            
+            });
         } else {
-            // Jika di tab All, langsung update saja (tidak perlu slide out)
             todo.completed = !todo.completed;
             saveToLocal();
             renderTodos();
@@ -208,20 +197,14 @@ function toggleComplete(id, btnElement) {
 function deleteTodo(id, btnElement) {
     if(confirm('Delete this task?')) {
         const listItem = btnElement.closest('li');
-        
-        // --- PERBAIKAN DI SINI JUGA ---
-        // Matikan animasi denyut sebelum hapus
-        listItem.classList.remove('today-task');
         listItem.classList.remove('animate-enter');
-        
-        // Jalankan animasi keluar
         listItem.classList.add('animate-leave');
 
         listItem.addEventListener('animationend', () => {
             todos = todos.filter(t => t.id !== id);
             saveToLocal();
             renderTodos();
-        }, { once: true });
+        });
     }
 }
 
