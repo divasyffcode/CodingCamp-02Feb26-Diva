@@ -75,7 +75,7 @@ function renderTodos() {
     if (filteredTodos.length === 0) {
         todoList.classList.add('hidden');
         emptyState.classList.remove('hidden');
-        emptyState.classList.add('flex');
+        emptyState.classList.add('flex'); // Pakai flex biar rata tengah
     } else {
         emptyState.classList.add('hidden');
         emptyState.classList.remove('flex');
@@ -93,8 +93,8 @@ function renderTodos() {
         reminderLimit.setDate(today.getDate() + 3);
 
         let dateDisplay = '';
-        let isUrgent = false; 
-        let isPulse = false; 
+        let isUrgent = false; // Flag untuk warna merah
+        let isPulse = false;  // Flag untuk animasi denyut (khusus hari ini)
 
         if (todo.date) {
             const todoDate = new Date(todo.date);
@@ -105,22 +105,24 @@ function renderTodos() {
 
             if (!todo.completed) {
                 if (todoDate < today) {
-                    // Overdue
+                    // Kasus 1: Sudah Lewat (Overdue) -> MERAH
                     isUrgent = true;
                     dateDisplay += ' (Overdue)';
                 } else if (todoDate.getTime() === today.getTime()) {
-                    // Hari Ini
+                    // Kasus 2: Hari Ini -> MERAH + BERDENYUT
                     isUrgent = true;
                     isPulse = true;
                     dateDisplay = 'Today';
                 } else if (todoDate <= reminderLimit) {
-                    // H-3
+                    // Kasus 3: Kurang dari atau sama dengan 3 Hari Lagi -> MERAH
                     isUrgent = true;
                 }
+                // Selain itu (masih lama) -> Tetap warna normal (putih/abu)
             }
         }
 
         // --- DEFINISI STYLE WARNA ---
+        // Default (Normal)
         let containerClass = 'border-slate-100'; 
         let textClass = 'text-slate-800';        
         let dateClass = 'text-slate-400';        
@@ -129,16 +131,18 @@ function renderTodos() {
 
         if (!todo.completed) {
             if (isUrgent) {
-                containerClass = 'border-rose-500 urgent-task';
-                bgClass = 'bg-rose-50';
+                // JIKA URGENT (H-3, Hari Ini, atau Telat) -> WARNA MERAH
+                containerClass = 'border-rose-500 urgent-task'; // Border kiri tebal merah
+                bgClass = 'bg-rose-50'; // Background agak pink
                 textClass = 'text-rose-800 font-bold';
                 dateClass = 'text-rose-600 font-bold';
                 
                 if (isPulse) {
-                    animClass = 'today-task';
+                    animClass = 'today-task'; // Animasi berdenyut khusus hari ini
                 }
             }
         } else {
+            // JIKA SELESAI
             bgClass = 'bg-slate-50';
             textClass = 'line-through text-slate-400 font-normal';
             dateClass = '!text-slate-300';
@@ -148,7 +152,6 @@ function renderTodos() {
         const li = document.createElement('li');
         li.className = `${bgClass} ${containerClass} border rounded-xl p-4 flex justify-between items-center shadow-sm transition-all hover:shadow-md animate-enter ${animClass}`;
         
-        // PERHATIKAN TANDA BACKTICK (`) DI BAWAH INI
         li.innerHTML = `
             <div class="flex items-center gap-4 flex-1">
                 <button onclick="toggleComplete(${todo.id}, this)" 
@@ -167,11 +170,11 @@ function renderTodos() {
             <button onclick="deleteTodo(${todo.id}, this)" class="text-slate-300 hover:text-red-500 transition-colors px-2">
                 <i class="fas fa-trash"></i>
             </button>
-        `; // <--- PASTI ADA TANDA INI
+        `;
 
         todoList.appendChild(li);
-    }); // Tutup forEach
-} 
+    });
+}
 
 function toggleComplete(id, btnElement) {
     const todo = todos.find(t => t.id === id);
