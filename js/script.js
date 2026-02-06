@@ -31,25 +31,27 @@ function addTodo(e) {
     const text = todoInput.value.trim();
     const date = dateInput.value;
 
+    // KUNCI UTAMA: Jika teks KOSONG atau tanggal KOSONG, tampilkan peringatan dan STOP sistem (return)
     if (!text || !date) {
         Swal.fire({
             icon: 'warning',
             title: 'Missing Information',
             text: 'Please fill in both the task and the due date!',
-            confirmButtonColor: '#4F46E5', 
+            confirmButtonColor: '#4F46E5',
             confirmButtonText: 'Got it!'
         });
 
-
+        // Fokuskan ke field yang masih kosong untuk memudahkan user
         if (!text) {
             todoInput.focus();
-        } else if (!date) {
+        } else {
             dateInput.focus();
         }
-        return;
+        
+        return; // Menghentikan fungsi agar data tidak masuk ke database/localStorage
     }
 
-
+    // Bagian ini hanya akan dijalankan jika kedua field di atas sudah terisi
     const newTodo = {
         id: Date.now() + Math.floor(Math.random() * 1000), 
         text: text,
@@ -61,6 +63,7 @@ function addTodo(e) {
     saveToLocal();
     renderTodos();
     
+    // Reset field setelah berhasil input
     todoInput.value = '';
     dateInput.value = '';
 }
