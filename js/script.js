@@ -1,33 +1,20 @@
+js
+
 // --- VARIABLES ---
 const todoForm = document.getElementById('todo-form');
 const todoInput = document.getElementById('todo-input');
 const dateInput = document.getElementById('date-input');
-const searchInput = document.getElementById('search-input'); // Variable Baru
 const todoList = document.getElementById('todo-list');
 const emptyState = document.getElementById('empty-state');
 const filterBtns = document.querySelectorAll('.filter-btn');
 
-// Load Data dari LocalStorage
 let todos = JSON.parse(localStorage.getItem('todos')) || [];
 let currentFilter = 'all';
-let searchText = ''; // Variable untuk menyimpan teks pencarian
 
 // --- EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', renderTodos);
+todoForm.addEventListener('submit', addTodo);
 
-if (todoForm) {
-    todoForm.addEventListener('submit', addTodo);
-}
-
-// Event Listener untuk Search (Real-time)
-if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-        searchText = e.target.value.toLowerCase(); // Simpan text kecil semua
-        renderTodos(); // Render ulang saat mengetik
-    });
-}
-
-// Event Listener untuk Tombol Filter
 filterBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
         filterBtns.forEach(b => b.classList.remove('active-tab'));
@@ -68,7 +55,6 @@ function addTodo(e) {
 function renderTodos() {
     todoList.innerHTML = '';
 
-    // 1. FILTER STATUS (All/Pending/Done)
     let filteredTodos = todos;
     if (currentFilter === 'pending') {
         filteredTodos = todos.filter(t => !t.completed);
@@ -76,50 +62,26 @@ function renderTodos() {
         filteredTodos = todos.filter(t => t.completed);
     }
 
-    // 2. FILTER SEARCH (Pencarian Teks) - FITUR BARU
-    if (searchText) {
-        filteredTodos = filteredTodos.filter(t => 
-            t.text.toLowerCase().includes(searchText)
-        );
-    }
-
-    // 3. SORTING (Prioritas Tanggal)
+    // SORTING: Tanggal Terdekat/Lewat Paling Atas
     filteredTodos.sort((a, b) => {
-        if (!a.date) return 1;
+        if (!a.date) return 1; // Yg gak ada tanggal taruh bawah
         if (!b.date) return -1;
-        return new Date(a.date) - new Date(b.date);
+        return new Date(a.date) - new Date(b.date); // Ascending (Kecil ke Besar)
     });
 
-    // 4. TAMPILAN KOSONG
     if (filteredTodos.length === 0) {
-        todoList.classList.add('hidden');
         emptyState.classList.remove('hidden');
-        emptyState.classList.add('flex'); 
-        
-        // Ubah pesan jika kosong karena pencarian
-        const emptyText = emptyState.querySelector('p');
-        if (searchText) {
-            emptyText.textContent = `No tasks found for "${searchText}"`;
-        } else {
-            emptyText.textContent = "No tasks found here.";
-        }
     } else {
         emptyState.classList.add('hidden');
-        emptyState.classList.remove('flex');
-        todoList.classList.remove('hidden');
     }
 
-    // 5. RENDER ITEM
     filteredTodos.forEach(todo => {
         const today = new Date();
         today.setHours(0,0,0,0);
-        const threeDaysLater = new Date(today);
-        threeDaysLater.setDate(today.getDate() + 3);
-
+        
         let dateDisplay = '';
-        let isOverdue = false; 
-        let isToday = false;
-        let isUpcoming = false;
+        let isUrgent = false; // Untuk yang lewat tanggal
+        let isToday = false;  // Untuk hari ini
 
         if (todo.date) {
             const todoDate = new Date(todo.date);
@@ -130,50 +92,26 @@ function renderTodos() {
 
             if (!todo.completed) {
                 if (todoDate < today) {
-                    isOverdue = true;
+                    isUrgent = true;
                     dateDisplay += ' (Overdue)';
                 } else if (todoDate.getTime() === today.getTime()) {
+                    isUrgent = true;
                     isToday = true;
                     dateDisplay = 'Today';
-                } else if (todoDate > today && todoDate <= threeDaysLater) {
-                    isUpcoming = true;
                 }
             }
         }
 
-        let containerClass = 'border-slate-100'; 
-        let textClass = 'text-slate-800';        
-        let dateClass = 'text-slate-400';        
-        let bgClass = 'bg-white';                
-        let pulseEffect = '';
-
-        if (!todo.completed) {
-            if (isOverdue) {
-                containerClass = 'border-rose-500 urgent-task'; 
-                bgClass = 'bg-rose-50'; 
-                textClass = 'text-rose-800 font-bold';
-                dateClass = 'text-rose-600 font-bold';
-            } else if (isToday) {
-                containerClass = 'border-red-500';
-                bgClass = 'bg-white'; 
-                textClass = 'text-red-600 font-bold';
-                dateClass = 'text-red-500 font-bold';
-                pulseEffect = 'today-task'; 
-            } else if (isUpcoming) {
-                containerClass = 'border-orange-300';
-                bgClass = 'bg-orange-50';
-                textClass = 'text-orange-700 font-medium';
-                dateClass = 'text-orange-600 font-bold';
-            }
-        } else {
-            bgClass = 'bg-slate-50';
-            textClass = 'line-through text-slate-400 font-normal';
-            dateClass = '!text-slate-300';
-            containerClass = 'border-slate-100 opacity-60';
-        }
+        // DEFINISI WARNA MERAH UNTUK PRIORITAS
+        // Jika Urgent/Today: Background Merah Muda, Border Merah, Teks Merah
+        const priorityClass = (isUrgent || isToday) ? 'urgent-task border-red-500' : 'border-slate-100';
+        const textPriorityClass = (isUrgent || isToday) ? 'text-red-600 font-semibold' : 'text-slate-800';
+        const datePriorityClass = (isUrgent || isToday) ? 'text-red-500 font-bold' : 'text-slate-400';
+        const pulseEffect = isToday ? 'today-task' : '';
+        const completedEffect = todo.completed ? 'opacity-50 bg-slate-50' : 'bg-white';
 
         const li = document.createElement('li');
-        li.className = `${bgClass} ${containerClass} border rounded-xl p-4 flex justify-between items-center shadow-sm transition-all hover:shadow-md animate-enter ${pulseEffect}`;
+        li.className = `${completedEffect} border rounded-xl p-4 flex justify-between items-center shadow-sm transition-all hover:shadow-md animate-enter ${priorityClass} ${pulseEffect}`;
         
         li.innerHTML = `
             <div class="flex items-center gap-4 flex-1">
@@ -183,8 +121,8 @@ function renderTodos() {
                 </button>
                 
                 <div class="flex flex-col">
-                    <span class="${textClass}">${todo.text}</span>
-                    <span class="text-xs ${dateClass}">
+                    <span class="${textPriorityClass} ${todo.completed ? 'line-through text-slate-400 !font-normal' : ''}">${todo.text}</span>
+                    <span class="text-xs ${datePriorityClass} ${todo.completed ? '!text-slate-300' : ''}">
                         ${dateDisplay ? `<i class="far fa-calendar-alt mr-1"></i>${dateDisplay}` : ''}
                     </span>
                 </div>
@@ -202,7 +140,8 @@ function renderTodos() {
 function toggleComplete(id, btnElement) {
     const todo = todos.find(t => t.id === id);
     if (todo) {
-        if (currentFilter !== 'all' || searchText) { // Update animasi jika sedang filter/search
+        // Animasi Swipe
+        if (currentFilter !== 'all') {
             const listItem = btnElement.closest('li');
             listItem.classList.remove('animate-enter');
             listItem.classList.add('animate-leave');
@@ -223,6 +162,7 @@ function toggleComplete(id, btnElement) {
 function deleteTodo(id, btnElement) {
     if(confirm('Delete this task?')) {
         const listItem = btnElement.closest('li');
+        // Pastikan animasi leave berjalan mulus
         listItem.classList.remove('animate-enter');
         listItem.classList.add('animate-leave');
 
