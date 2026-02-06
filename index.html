@@ -30,7 +30,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link rel="stylesheet" href="css/style.css?v=final">
+    <link rel="stylesheet" href="css/style.css?v=final-revised">
 </head>
 
 <body class="bg-slate-100 font-['Inter'] min-h-screen flex items-center justify-center p-4 overflow-x-hidden">
@@ -77,16 +77,12 @@
 
             <div class="mt-6 pt-4 border-t border-slate-100 flex justify-between items-center">
                 
-                <div class="flex gap-3 text-[10px] sm:text-xs font-medium text-slate-400 select-none">
-                    <div class="group flex items-center gap-1.5 cursor-help" title="Deadline Hari Ini / Terlewat">
-                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-sm"></span>
-                        <span class="group-hover:text-rose-500 transition-colors">Urgent</span>
-                    </div>
-                    
-                    <div class="group flex items-center gap-1.5 cursor-help" title="Deadline dalam 3 Hari">
-                        <span class="w-2.5 h-2.5 rounded-full bg-orange-400 shadow-sm"></span>
-                        <span class="group-hover:text-orange-500 transition-colors">Upcoming</span>
-                    </div>
+                <div class="flex items-center gap-2 text-[10px] sm:text-xs font-medium text-slate-400 select-none cursor-help" title="Tugas akan berwarna merah jika deadline < 3 hari">
+                    <span class="relative flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                    </span>
+                    <span>Red = Deadline < 3 Days</span>
                 </div>
 
                 <button onclick="clearAll()" class="text-[10px] sm:text-xs text-slate-300 hover:text-red-500 font-bold uppercase tracking-wider transition flex items-center gap-1.5 py-1 px-2 hover:bg-red-50 rounded-lg">
@@ -97,6 +93,6 @@
         </div>
     </div>
 
-    <script src="js/script.js?v=final" defer></script>
+    <script src="js/script.js?v=final-revised" defer></script>
 </body>
 </html>

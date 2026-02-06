@@ -56,7 +56,7 @@ function addTodo(e) {
 function renderTodos() {
     todoList.innerHTML = '';
 
-    // 1. FILTER
+    // 1. FILTER STATUS
     let filteredTodos = todos;
     if (currentFilter === 'pending') {
         filteredTodos = todos.filter(t => !t.completed);
@@ -64,19 +64,18 @@ function renderTodos() {
         filteredTodos = todos.filter(t => t.completed);
     }
 
-    // 2. AUTO-SORTING (Prioritas Tanggal)
+    // 2. AUTO-SORTING (Tanggal Terdekat/Lewat Paling Atas)
     filteredTodos.sort((a, b) => {
         if (!a.date) return 1; 
         if (!b.date) return -1;
         return new Date(a.date) - new Date(b.date); 
     });
 
-    // 3. EMPTY STATE
+    // 3. TAMPILAN KOSONG
     if (filteredTodos.length === 0) {
         todoList.classList.add('hidden');
         emptyState.classList.remove('hidden');
-        // Gunakan flex agar icon & teks rata tengah sempurna
-        emptyState.classList.add('flex'); 
+        emptyState.classList.add('flex'); // Pakai flex biar rata tengah
     } else {
         emptyState.classList.add('hidden');
         emptyState.classList.remove('flex');
@@ -85,17 +84,17 @@ function renderTodos() {
 
     // 4. RENDER ITEM
     filteredTodos.forEach(todo => {
-        // Setup Waktu (Hari ini & 3 Hari ke depan)
+        // --- LOGIKA TANGGAL ---
         const today = new Date();
         today.setHours(0,0,0,0);
         
-        const threeDaysLater = new Date(today);
-        threeDaysLater.setDate(today.getDate() + 3);
+        // Batas Reminder (3 Hari ke depan)
+        const reminderLimit = new Date(today);
+        reminderLimit.setDate(today.getDate() + 3);
 
         let dateDisplay = '';
-        let isOverdue = false; 
-        let isToday = false;
-        let isUpcoming = false; // Logika Baru: Mendekati Deadline
+        let isUrgent = false; // Flag untuk warna merah
+        let isPulse = false;  // Flag untuk animasi denyut (khusus hari ini)
 
         if (todo.date) {
             const todoDate = new Date(todo.date);
@@ -106,47 +105,44 @@ function renderTodos() {
 
             if (!todo.completed) {
                 if (todoDate < today) {
-                    isOverdue = true;
+                    // Kasus 1: Sudah Lewat (Overdue) -> MERAH
+                    isUrgent = true;
                     dateDisplay += ' (Overdue)';
                 } else if (todoDate.getTime() === today.getTime()) {
-                    isToday = true;
+                    // Kasus 2: Hari Ini -> MERAH + BERDENYUT
+                    isUrgent = true;
+                    isPulse = true;
                     dateDisplay = 'Today';
-                } else if (todoDate > today && todoDate <= threeDaysLater) {
-                    isUpcoming = true; // Terdeteksi < 3 hari
+                } else if (todoDate <= reminderLimit) {
+                    // Kasus 3: Kurang dari atau sama dengan 3 Hari Lagi -> MERAH
+                    isUrgent = true;
                 }
+                // Selain itu (masih lama) -> Tetap warna normal (putih/abu)
             }
         }
 
-        // --- DEFINISI WARNA (Merah / Oranye) ---
+        // --- DEFINISI STYLE WARNA ---
+        // Default (Normal)
         let containerClass = 'border-slate-100'; 
         let textClass = 'text-slate-800';        
         let dateClass = 'text-slate-400';        
         let bgClass = 'bg-white';                
-        let pulseEffect = '';
+        let animClass = '';
 
         if (!todo.completed) {
-            if (isOverdue) {
-                // Merah Gelap (Telat)
-                containerClass = 'border-rose-500 urgent-task'; 
-                bgClass = 'bg-rose-50'; 
+            if (isUrgent) {
+                // JIKA URGENT (H-3, Hari Ini, atau Telat) -> WARNA MERAH
+                containerClass = 'border-rose-500 urgent-task'; // Border kiri tebal merah
+                bgClass = 'bg-rose-50'; // Background agak pink
                 textClass = 'text-rose-800 font-bold';
                 dateClass = 'text-rose-600 font-bold';
-            } else if (isToday) {
-                // Merah Cerah (Hari Ini) + Berdenyut
-                containerClass = 'border-red-500';
-                bgClass = 'bg-white'; 
-                textClass = 'text-red-600 font-bold';
-                dateClass = 'text-red-500 font-bold';
-                pulseEffect = 'today-task'; 
-            } else if (isUpcoming) {
-                // Oranye (Mendekati)
-                containerClass = 'border-orange-300';
-                bgClass = 'bg-orange-50';
-                textClass = 'text-orange-700 font-medium';
-                dateClass = 'text-orange-600 font-bold';
+                
+                if (isPulse) {
+                    animClass = 'today-task'; // Animasi berdenyut khusus hari ini
+                }
             }
         } else {
-            // Selesai
+            // JIKA SELESAI
             bgClass = 'bg-slate-50';
             textClass = 'line-through text-slate-400 font-normal';
             dateClass = '!text-slate-300';
@@ -154,7 +150,7 @@ function renderTodos() {
         }
 
         const li = document.createElement('li');
-        li.className = `${bgClass} ${containerClass} border rounded-xl p-4 flex justify-between items-center shadow-sm transition-all hover:shadow-md animate-enter ${pulseEffect}`;
+        li.className = `${bgClass} ${containerClass} border rounded-xl p-4 flex justify-between items-center shadow-sm transition-all hover:shadow-md animate-enter ${animClass}`;
         
         li.innerHTML = `
             <div class="flex items-center gap-4 flex-1">
