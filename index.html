@@ -3,38 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern To-Do List</title>
+    <title>Smart Task Manager</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#4F46E5', // Indigo
+                        brandLight: '#818CF8',
+                        danger: '#EF4444', // Red
+                        success: '#10B981', // Emerald
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="bg-slate-100 font-['Inter'] min-h-screen flex items-center justify-center p-4">
 
-    <div class="container">
-        <header>
-            <h1>My Tasks</h1>
-            <p>CodingCamp Project</p>
-        </header>
-
-        <div class="input-group">
-            <input type="text" id="todo-input" placeholder="Apa yang ingin dikerjakan?">
-            <input type="date" id="date-input">
-            <button id="add-btn" title="Add Task"><i class="fas fa-plus"></i></button>
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+        
+        <div class="bg-brand p-8 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-full bg-white opacity-10 transform -skew-y-12 scale-150 origin-bottom-left"></div>
+            <h1 class="text-3xl font-bold text-white relative z-10">Task Master</h1>
+            <p class="text-brandLight text-sm mt-1 relative z-10">Prioritize & Execute</p>
         </div>
 
-        <div class="controls">
-            <div class="filters">
-                <span class="active" onclick="filterTodo('all')">All</span>
-                <span onclick="filterTodo('pending')">Pending</span>
-                <span onclick="filterTodo('completed')">Done</span>
+        <div class="p-6">
+            <form id="todo-form" class="flex flex-col gap-3 mb-6">
+                <div class="relative">
+                    <input type="text" id="todo-input" 
+                        class="w-full pl-4 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition shadow-sm placeholder-slate-400 text-slate-700"
+                        placeholder="What needs to be done?">
+                </div>
+                
+                <div class="flex gap-2">
+                    <input type="date" id="date-input" 
+                        class="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand text-slate-600 cursor-pointer shadow-sm">
+                    
+                    <button type="submit" 
+                        class="bg-brand hover:bg-indigo-700 text-white px-6 py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2 font-semibold">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                </div>
+            </form>
+
+            <div class="flex justify-between bg-slate-100 p-1 rounded-xl mb-6 relative">
+                <button class="filter-btn w-1/3 py-2 text-sm font-semibold rounded-lg text-slate-500 transition-all active-tab" data-filter="all">All</button>
+                <button class="filter-btn w-1/3 py-2 text-sm font-semibold rounded-lg text-slate-500 transition-all" data-filter="pending">Pending</button>
+                <button class="filter-btn w-1/3 py-2 text-sm font-semibold rounded-lg text-slate-500 transition-all" data-filter="completed">Done</button>
             </div>
-            <button id="clear-btn" onclick="clearAll()">Delete All</button>
-        </div>
 
-        <div class="todo-container">
-            <ul class="todo-list">
+            <ul id="todo-list" class="space-y-3 min-h-[200px] max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                 </ul>
-            <div id="empty-msg" class="empty-message">No task found</div>
+
+            <div id="empty-state" class="hidden text-center py-8 text-slate-400">
+                <i class="fas fa-clipboard-check text-4xl mb-3 opacity-50"></i>
+                <p>No tasks found here.</p>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+                <button onclick="clearAll()" class="text-xs text-red-500 hover:text-red-700 font-semibold uppercase tracking-wider transition flex items-center gap-1">
+                    <i class="fas fa-trash-alt"></i> Delete All
+                </button>
+            </div>
         </div>
     </div>
 
