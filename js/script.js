@@ -25,18 +25,30 @@ filterBtns.forEach(btn => {
     });
 });
 
-// --- FUNCTIONS ---
-
 function addTodo(e) {
     e.preventDefault();
     
     const text = todoInput.value.trim();
     const date = dateInput.value;
 
-    if (!text) {
-        alert("Please enter a task!");
+    if (!text || !date) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Missing Information',
+            text: 'Please fill in both the task and the due date!',
+            confirmButtonColor: '#4F46E5', 
+            confirmButtonText: 'Got it!'
+        });
+
+
+        if (!text) {
+            todoInput.focus();
+        } else if (!date) {
+            dateInput.focus();
+        }
         return;
     }
+
 
     const newTodo = {
         id: Date.now() + Math.floor(Math.random() * 1000), 
