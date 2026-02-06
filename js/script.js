@@ -15,10 +15,8 @@ todoForm.addEventListener('submit', addTodo);
 
 filterBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
-        // Update tampilan tab aktif
         filterBtns.forEach(b => b.classList.remove('active-tab'));
         e.target.classList.add('active-tab');
-        
         currentFilter = e.target.getAttribute('data-filter');
         renderTodos();
     });
@@ -33,14 +31,15 @@ function addTodo(e) {
     const date = dateInput.value;
 
     if (!text) {
-        alert("Please enter a task!"); // Bisa diganti custom alert
+        alert("Please enter a task!");
         return;
     }
 
+    // PERBAIKAN: Menambahkan Random Number agar ID tidak pernah kembar
     const newTodo = {
-        id: Date.now(),
+        id: Date.now() + Math.floor(Math.random() * 1000), 
         text: text,
-        date: date, // Format YYYY-MM-DD
+        date: date, 
         completed: false
     };
 
@@ -48,7 +47,6 @@ function addTodo(e) {
     saveToLocal();
     renderTodos();
     
-    // Reset Form
     todoInput.value = '';
     dateInput.value = '';
 }
@@ -56,7 +54,6 @@ function addTodo(e) {
 function renderTodos() {
     todoList.innerHTML = '';
 
-    // 1. FILTERING
     let filteredTodos = todos;
     if (currentFilter === 'pending') {
         filteredTodos = todos.filter(t => !t.completed);
@@ -64,24 +61,20 @@ function renderTodos() {
         filteredTodos = todos.filter(t => t.completed);
     }
 
-    // 2. SORTING (Logika Urutan Tanggal)
-    // Prioritas: Tanggal Terdekat/Lewat -> Tanggal Nanti -> Tanpa Tanggal
+    // Sorting
     filteredTodos.sort((a, b) => {
-        if (!a.date) return 1; // Jika A tidak ada tanggal, taruh bawah
-        if (!b.date) return -1; // Jika B tidak ada tanggal, A di atas
-        return new Date(a.date) - new Date(b.date); // Urutkan ascending (terkecil/terdekat dulu)
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        return new Date(a.date) - new Date(b.date);
     });
 
-    // Cek Kosong
     if (filteredTodos.length === 0) {
         emptyState.classList.remove('hidden');
     } else {
         emptyState.classList.add('hidden');
     }
 
-    // 3. RENDERING
     filteredTodos.forEach(todo => {
-        // Hitung status urgensi tanggal
         const today = new Date();
         today.setHours(0,0,0,0);
         
@@ -91,26 +84,23 @@ function renderTodos() {
 
         if (todo.date) {
             const todoDate = new Date(todo.date);
-            todoDate.setHours(0,0,0,0); // Reset jam agar perbandingan adil
+            todoDate.setHours(0,0,0,0);
 
-            // Format tanggal cantik
             const options = { day: 'numeric', month: 'short', year: 'numeric' };
             dateDisplay = new Date(todo.date).toLocaleDateString('id-ID', options);
 
-            // Logika Warna Merah
             if (!todo.completed) {
                 if (todoDate < today) {
-                    isUrgent = true; // Sudah lewat
+                    isUrgent = true;
                     dateDisplay += ' (Overdue)';
                 } else if (todoDate.getTime() === today.getTime()) {
                     isUrgent = true;
-                    isToday = true; // Hari ini
+                    isToday = true;
                     dateDisplay = 'Today';
                 }
             }
         }
 
-        // Tentukan Class CSS berdasarkan kondisi
         const li = document.createElement('li');
         li.className = `bg-white border rounded-xl p-4 flex justify-between items-center shadow-sm transition-all hover:shadow-md animate-enter ${isUrgent ? 'urgent-task border-red-300' : 'border-slate-100'} ${isToday ? 'today-task' : ''} ${todo.completed ? 'opacity-60 bg-slate-50' : ''}`;
         
@@ -139,22 +129,20 @@ function renderTodos() {
 }
 
 function toggleComplete(id, btnElement) {
+    // Mencari todo berdasarkan ID yang spesifik
     const todo = todos.find(t => t.id === id);
     if (todo) {
-        // Jika sedang di tab filter (bukan All), kita kasih animasi keluar dulu
         if (currentFilter !== 'all') {
             const listItem = btnElement.closest('li');
             listItem.classList.remove('animate-enter');
             listItem.classList.add('animate-leave');
 
-            // Tunggu animasi selesai baru update data
             listItem.addEventListener('animationend', () => {
                 todo.completed = !todo.completed;
                 saveToLocal();
                 renderTodos();
             });
         } else {
-            // Jika di tab All, update langsung tanpa swipe hilang
             todo.completed = !todo.completed;
             saveToLocal();
             renderTodos();
