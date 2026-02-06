@@ -1,56 +1,3 @@
-// --- VARIABLES ---
-const todoForm = document.getElementById('todo-form');
-const todoInput = document.getElementById('todo-input');
-const dateInput = document.getElementById('date-input');
-const todoList = document.getElementById('todo-list');
-const emptyState = document.getElementById('empty-state');
-const filterBtns = document.querySelectorAll('.filter-btn');
-
-let todos = JSON.parse(localStorage.getItem('todos')) || [];
-let currentFilter = 'all';
-
-// --- EVENT LISTENERS ---
-document.addEventListener('DOMContentLoaded', renderTodos);
-todoForm.addEventListener('submit', addTodo);
-
-filterBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        filterBtns.forEach(b => b.classList.remove('active-tab'));
-        e.target.classList.add('active-tab');
-        currentFilter = e.target.getAttribute('data-filter');
-        renderTodos();
-    });
-});
-
-// --- FUNCTIONS ---
-
-function addTodo(e) {
-    e.preventDefault();
-    
-    const text = todoInput.value.trim();
-    const date = dateInput.value;
-
-    if (!text) {
-        alert("Please enter a task!");
-        return;
-    }
-
-    // PERBAIKAN: Menambahkan Random Number agar ID tidak pernah kembar
-    const newTodo = {
-        id: Date.now() + Math.floor(Math.random() * 1000), 
-        text: text,
-        date: date, 
-        completed: false
-    };
-
-    todos.push(newTodo);
-    saveToLocal();
-    renderTodos();
-    
-    todoInput.value = '';
-    dateInput.value = '';
-}
-
 function renderTodos() {
     todoList.innerHTML = '';
 
@@ -61,11 +8,11 @@ function renderTodos() {
         filteredTodos = todos.filter(t => t.completed);
     }
 
-    // Sorting
+    // SORTING: Tanggal Terdekat/Lewat Paling Atas
     filteredTodos.sort((a, b) => {
-        if (!a.date) return 1;
+        if (!a.date) return 1; 
         if (!b.date) return -1;
-        return new Date(a.date) - new Date(b.date);
+        return new Date(a.date) - new Date(b.date); 
     });
 
     if (filteredTodos.length === 0) {
@@ -75,12 +22,20 @@ function renderTodos() {
     }
 
     filteredTodos.forEach(todo => {
+        // Setup Tanggal Hari Ini (Jam dinolkan agar adil)
         const today = new Date();
         today.setHours(0,0,0,0);
         
+        // Setup Tanggal 3 Hari ke Depan
+        const threeDaysLater = new Date(today);
+        threeDaysLater.setDate(today.getDate() + 3);
+
         let dateDisplay = '';
-        let isUrgent = false;
-        let isToday = false;
+        
+        // Status Flags
+        let isOverdue = false;  // Lewat tenggat
+        let isToday = false;    // Hari ini
+        let isUpcoming = false; // 3 hari ke depan
 
         if (todo.date) {
             const todoDate = new Date(todo.date);
@@ -91,18 +46,59 @@ function renderTodos() {
 
             if (!todo.completed) {
                 if (todoDate < today) {
-                    isUrgent = true;
+                    // KONDISI 1: SUDAH LEWAT (OVERDUE)
+                    isOverdue = true;
                     dateDisplay += ' (Overdue)';
                 } else if (todoDate.getTime() === today.getTime()) {
-                    isUrgent = true;
+                    // KONDISI 2: HARI INI (TODAY)
                     isToday = true;
                     dateDisplay = 'Today';
+                } else if (todoDate > today && todoDate <= threeDaysLater) {
+                    // KONDISI 3: MENDEKATI (UPCOMING 3 DAYS)
+                    isUpcoming = true;
                 }
             }
         }
 
+        // --- LOGIKA PEWARNAAN ---
+        
+        let containerClass = 'border-slate-100'; // Default border
+        let textClass = 'text-slate-800';        // Default text
+        let dateClass = 'text-slate-400';        // Default date color
+        let bgClass = 'bg-white';                // Default background
+        let pulseEffect = '';
+
+        if (!todo.completed) {
+            if (isOverdue) {
+                // Style Overdue: Merah Gelap & Background Merah Muda (Tanda Bahaya)
+                containerClass = 'border-rose-500 urgent-task'; // Class urgent-task memberi border kiri tebal
+                bgClass = 'bg-rose-50'; 
+                textClass = 'text-rose-800 font-bold';
+                dateClass = 'text-rose-600 font-bold';
+            } else if (isToday) {
+                // Style Today: Merah Cerah & Berdenyut (Action Now)
+                containerClass = 'border-red-500';
+                bgClass = 'bg-white'; // Tetap putih biar bersih, tapi border merah
+                textClass = 'text-red-600 font-bold';
+                dateClass = 'text-red-500 font-bold';
+                pulseEffect = 'today-task'; // Efek denyut
+            } else if (isUpcoming) {
+                // Style Upcoming: Oranye/Amber (Warning)
+                containerClass = 'border-orange-300';
+                bgClass = 'bg-orange-50';
+                textClass = 'text-orange-700 font-medium';
+                dateClass = 'text-orange-600 font-bold';
+            }
+        } else {
+            // Style Completed (Selesai)
+            bgClass = 'bg-slate-50';
+            textClass = 'line-through text-slate-400 font-normal';
+            dateClass = '!text-slate-300';
+            containerClass = 'border-slate-100 opacity-60';
+        }
+
         const li = document.createElement('li');
-        li.className = `bg-white border rounded-xl p-4 flex justify-between items-center shadow-sm transition-all hover:shadow-md animate-enter ${isUrgent ? 'urgent-task border-red-300' : 'border-slate-100'} ${isToday ? 'today-task' : ''} ${todo.completed ? 'opacity-60 bg-slate-50' : ''}`;
+        li.className = `${bgClass} ${containerClass} border rounded-xl p-4 flex justify-between items-center shadow-sm transition-all hover:shadow-md animate-enter ${pulseEffect}`;
         
         li.innerHTML = `
             <div class="flex items-center gap-4 flex-1">
@@ -112,8 +108,8 @@ function renderTodos() {
                 </button>
                 
                 <div class="flex flex-col">
-                    <span class="font-medium text-slate-800 ${todo.completed ? 'line-through text-slate-400' : ''}">${todo.text}</span>
-                    <span class="text-xs ${isUrgent ? 'text-red-500 font-bold' : 'text-slate-400'}">
+                    <span class="${textClass}">${todo.text}</span>
+                    <span class="text-xs ${dateClass}">
                         ${dateDisplay ? `<i class="far fa-calendar-alt mr-1"></i>${dateDisplay}` : ''}
                     </span>
                 </div>
@@ -126,51 +122,4 @@ function renderTodos() {
 
         todoList.appendChild(li);
     });
-}
-
-function toggleComplete(id, btnElement) {
-    // Mencari todo berdasarkan ID yang spesifik
-    const todo = todos.find(t => t.id === id);
-    if (todo) {
-        if (currentFilter !== 'all') {
-            const listItem = btnElement.closest('li');
-            listItem.classList.remove('animate-enter');
-            listItem.classList.add('animate-leave');
-
-            listItem.addEventListener('animationend', () => {
-                todo.completed = !todo.completed;
-                saveToLocal();
-                renderTodos();
-            });
-        } else {
-            todo.completed = !todo.completed;
-            saveToLocal();
-            renderTodos();
-        }
-    }
-}
-
-function deleteTodo(id, btnElement) {
-    if(confirm('Delete this task?')) {
-        const listItem = btnElement.closest('li');
-        listItem.classList.add('animate-leave');
-
-        listItem.addEventListener('animationend', () => {
-            todos = todos.filter(t => t.id !== id);
-            saveToLocal();
-            renderTodos();
-        });
-    }
-}
-
-function clearAll() {
-    if (confirm('Are you sure you want to delete ALL tasks?')) {
-        todos = [];
-        saveToLocal();
-        renderTodos();
-    }
-}
-
-function saveToLocal() {
-    localStorage.setItem('todos', JSON.stringify(todos));
 }
