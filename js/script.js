@@ -209,7 +209,7 @@ function deleteTodo(id, btnElement) {
 }
 
 function clearAll() {
-    if (confirm('Are you sure you want to delete ALL tasks?')) {
+    if (confirm('Are you sure you want to DELETE ALL tasks?')) {
         todos = [];
         saveToLocal();
         renderTodos();
