@@ -1,4 +1,3 @@
-// --- VARIABLES ---
 const todoForm = document.getElementById('todo-form');
 const todoInput = document.getElementById('todo-input');
 const dateInput = document.getElementById('date-input');
@@ -9,7 +8,6 @@ const filterBtns = document.querySelectorAll('.filter-btn');
 let todos = JSON.parse(localStorage.getItem('todos')) || [];
 let currentFilter = 'all';
 
-// --- EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', renderTodos);
 
 if (todoForm) {
@@ -31,7 +29,6 @@ function addTodo(e) {
     const text = todoInput.value.trim();
     const date = dateInput.value;
 
-    // KUNCI UTAMA: Jika teks KOSONG atau tanggal KOSONG, tampilkan peringatan dan STOP sistem (return)
     if (!text || !date) {
         Swal.fire({
             icon: 'warning',
@@ -41,17 +38,15 @@ function addTodo(e) {
             confirmButtonText: 'Got it!'
         });
 
-        // Fokuskan ke field yang masih kosong untuk memudahkan user
         if (!text) {
             todoInput.focus();
         } else {
             dateInput.focus();
         }
         
-        return; // Menghentikan fungsi agar data tidak masuk ke database/localStorage
+        return; 
     }
 
-    // Bagian ini hanya akan dijalankan jika kedua field di atas sudah terisi
     const newTodo = {
         id: Date.now() + Math.floor(Math.random() * 1000), 
         text: text,
@@ -63,7 +58,6 @@ function addTodo(e) {
     saveToLocal();
     renderTodos();
     
-    // Reset field setelah berhasil input
     todoInput.value = '';
     dateInput.value = '';
 }
@@ -71,7 +65,6 @@ function addTodo(e) {
 function renderTodos() {
     todoList.innerHTML = '';
 
-    // 1. FILTER STATUS
     let filteredTodos = todos;
     if (currentFilter === 'pending') {
         filteredTodos = todos.filter(t => !t.completed);
@@ -79,37 +72,31 @@ function renderTodos() {
         filteredTodos = todos.filter(t => t.completed);
     }
 
-    // 2. AUTO-SORTING (Tanggal Terdekat/Lewat Paling Atas)
     filteredTodos.sort((a, b) => {
         if (!a.date) return 1; 
         if (!b.date) return -1;
         return new Date(a.date) - new Date(b.date); 
     });
 
-    // 3. TAMPILAN KOSONG
     if (filteredTodos.length === 0) {
         todoList.classList.add('hidden');
         emptyState.classList.remove('hidden');
-        emptyState.classList.add('flex'); // Pakai flex biar rata tengah
+        emptyState.classList.add('flex'); 
     } else {
         emptyState.classList.add('hidden');
         emptyState.classList.remove('flex');
         todoList.classList.remove('hidden');
     }
 
-    // 4. RENDER ITEM
     filteredTodos.forEach(todo => {
-        // --- LOGIKA TANGGAL ---
         const today = new Date();
         today.setHours(0,0,0,0);
-        
-        // Batas Reminder (3 Hari ke depan)
         const reminderLimit = new Date(today);
         reminderLimit.setDate(today.getDate() + 3);
 
         let dateDisplay = '';
-        let isUrgent = false; // Flag untuk warna merah
-        let isPulse = false;  // Flag untuk animasi denyut (khusus hari ini)
+        let isUrgent = false; 
+        let isPulse = false;  
 
         if (todo.date) {
             const todoDate = new Date(todo.date);
@@ -120,24 +107,19 @@ function renderTodos() {
 
             if (!todo.completed) {
                 if (todoDate < today) {
-                    // Kasus 1: Sudah Lewat (Overdue) -> MERAH
                     isUrgent = true;
                     dateDisplay += ' (Overdue)';
                 } else if (todoDate.getTime() === today.getTime()) {
-                    // Kasus 2: Hari Ini -> MERAH + BERDENYUT
                     isUrgent = true;
                     isPulse = true;
                     dateDisplay = 'Today';
                 } else if (todoDate <= reminderLimit) {
-                    // Kasus 3: Kurang dari atau sama dengan 3 Hari Lagi -> MERAH
                     isUrgent = true;
                 }
-                // Selain itu (masih lama) -> Tetap warna normal (putih/abu)
+                
             }
         }
 
-        // --- DEFINISI STYLE WARNA ---
-        // Default (Normal)
         let containerClass = 'border-slate-100'; 
         let textClass = 'text-slate-800';        
         let dateClass = 'text-slate-400';        
@@ -146,18 +128,16 @@ function renderTodos() {
 
         if (!todo.completed) {
             if (isUrgent) {
-                // JIKA URGENT (H-3, Hari Ini, atau Telat) -> WARNA MERAH
-                containerClass = 'border-rose-500 urgent-task'; // Border kiri tebal merah
-                bgClass = 'bg-rose-50'; // Background agak pink
+                containerClass = 'border-rose-500 urgent-task'; 
+                bgClass = 'bg-rose-50'; 
                 textClass = 'text-rose-800 font-bold';
                 dateClass = 'text-rose-600 font-bold';
                 
                 if (isPulse) {
-                    animClass = 'today-task'; // Animasi berdenyut khusus hari ini
+                    animClass = 'today-task'; 
                 }
             }
         } else {
-            // JIKA SELESAI
             bgClass = 'bg-slate-50';
             textClass = 'line-through text-slate-400 font-normal';
             dateClass = '!text-slate-300';
@@ -196,16 +176,10 @@ function toggleComplete(id, btnElement) {
     if (todo) {
         const listItem = btnElement.closest('li');
         
-        // Jika sedang di tab 'Pending' atau 'Done', kita jalankan animasi slide out
         if (currentFilter !== 'all') {
-            // Hapus animasi pulse (jika ada) agar tidak mengganggu animationend
             listItem.classList.remove('today-task');
             listItem.classList.remove('animate-enter');
-            
-            // Tambahkan animasi keluar
             listItem.classList.add('animate-leave');
-
-            // Gunakan { once: true } agar event listener langsung terhapus setelah jalan
             listItem.addEventListener('animationend', () => {
                 todo.completed = !todo.completed;
                 saveToLocal();
@@ -213,7 +187,6 @@ function toggleComplete(id, btnElement) {
             }, { once: true });
             
         } else {
-            // Jika di tab 'All', langsung update tanpa slide out
             todo.completed = !todo.completed;
             saveToLocal();
             renderTodos();
